@@ -3,122 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creator Studio | StripDot Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>StripDot | Admin Payment Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --pink: #ff007a; --bg-dark: #0a0a0c; --glass: rgba(255, 255, 255, 0.05); }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #1a0b2e, var(--bg-dark)); color: white; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        
-        /* Auth Overlay */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(15px); }
-        .auth-card { width: 350px; text-align: center; background: var(--glass); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
-        .auth-card input { width: 90%; padding: 12px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; outline: none; }
-        
-        /* Main Layout */
-        .glass-container { width: 95%; height: 92vh; background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; }
-        .navbar { padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .logo { font-weight: 800; font-size: 1.5rem; }
-        .logo span { color: var(--pink); }
-        .main-layout { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; padding: 20px; gap: 20px; overflow: hidden; }
-        
-        .sidebar { display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
-        .card { background: var(--glass); padding: 20px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .token-display { font-size: 2.2rem; font-weight: 800; color: var(--pink); margin: 5px 0; }
-        
-        /* Link Sharing UI */
-        .link-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
-        .link-box input { background: none; border: none; color: #888; font-size: 0.75rem; flex-grow: 1; outline: none; pointer-events: none; }
-        .btn-copy { background: var(--pink); border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; }
-
-        /* Video & Controls */
-        .video-window { position: relative; width: 100%; height: 100%; background: #000; border-radius: 24px; overflow: hidden; }
-        #webcam { width: 100%; height: 100%; object-fit: cover; transition: filter 0.5s ease; }
-        .private-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(50px); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5; text-align: center; }
-        
-        .video-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; align-items: center; z-index: 10; }
-        .btn { border: none; font-weight: bold; cursor: pointer; transition: 0.3s; border-radius: 50px; }
-        .btn-main { padding: 15px 50px; font-size: 1.1rem; }
-        .btn-icon { background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        
-        .start { background: var(--pink); color: white; box-shadow: 0 0 20px var(--pink); }
-        .stop { background: white; color: black; }
-        .btn-payout { width: 100%; background: white; color: black; padding: 12px; border-radius: 12px; margin-top: 10px; }
-        
-        .chat-messages { height: 160px; overflow-y: auto; font-size: 0.85rem; color: #ccc; display: flex; flex-direction: column-reverse; }
-        .msg { margin-bottom: 8px; padding: 5px; border-radius: 5px; background: rgba(255,255,255,0.02); }
+        body { font-family: 'Inter', sans-serif; background: #0a0a0c; color: white; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff007a; padding-bottom: 10px; }
+        .payout-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-top: 15px; display: grid; grid-template-columns: 1fr 150px; gap: 10px; }
+        .msg-text { font-family: monospace; background: #000; padding: 10px; border-radius: 5px; color: #2ecc71; font-size: 0.85rem; }
+        .btn-approve { background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .status-badge { color: #ffae00; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        #notification-status { font-size: 0.8rem; color: #888; }
     </style>
 </head>
 <body>
 
-    <div id="auth-container" class="overlay">
-        <div class="auth-card">
-            <div class="logo" style="margin-bottom: 20px;">STRIP<span>DOT</span></div>
-            <div id="login-form">
-                <h3>Creator Login</h3>
-                <input type="email" id="login-email" placeholder="Email Address">
-                <input type="password" id="login-password" placeholder="Password">
-                <button class="btn btn-main start" id="btn-login">Sign In</button>
-                <p style="font-size: 0.8rem; margin-top:15px; color:#888;">New Studio? <a href="#" onclick="toggleAuth()" style="color:var(--pink); text-decoration:none;">Register</a></p>
-            </div>
-            <div id="register-form" style="display:none;">
-                <h3>Registration</h3>
-                <input type="text" id="reg-name" placeholder="Stage Name (no spaces)">
-                <input type="email" id="reg-email" placeholder="Email">
-                <input type="password" id="reg-password" placeholder="Password">
-                <button class="btn btn-main start" id="btn-register">Create Studio</button>
-                <p style="font-size: 0.8rem; margin-top:15px; color:#888;">Back to <a href="#" onclick="toggleAuth()" style="color:var(--pink); text-decoration:none;">Login</a></p>
-            </div>
-        </div>
+    <div class="header">
+        <h1>Payment Monitor</h1>
+        <div id="notification-status">System Live</div>
     </div>
 
-    <div id="studio-app" class="glass-container" style="display: none;">
-        <nav class="navbar">
-            <div class="logo">STRIP<span>DOT</span></div>
-            <div id="header-user">@User • <button id="master-logout" style="background:none; border:none; color:var(--pink); cursor:pointer; font-weight:bold;">Logout</button></div>
-        </nav>
-
-        <div class="main-layout">
-            <aside class="sidebar">
-                <div class="card">
-                    <h4>Invite Clients</h4>
-                    <p style="font-size: 0.7rem; color: #888;">Share your live link to earn tokens:</p>
-                    <div class="link-box">
-                        <input type="text" id="share-link-input" value="stripdot.live/loading...">
-                        <button class="btn-copy" onclick="copyShareLink()">Copy</button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3>My Earnings</h3>
-                    <div class="token-display">💎 <span id="token-count">0.00</span></div>
-                    <p>≈ KES <span id="kes-value">0</span></p>
-                    <button class="btn-payout" id="payout-trigger">Withdraw to M-Pesa</button>
-                </div>
-
-                <div class="card">
-                    <h4>Live Interaction</h4>
-                    <div id="chat-box" class="chat-messages"><div class="msg">System: Waiting for session...</div></div>
-                </div>
-            </aside>
-
-            <section class="video-window">
-                <div class="private-overlay" id="private-ui">
-                    <h2 style="color:var(--pink);">PRIVATE MODE ACTIVE</h2>
-                    <p>Only paying subscribers can see the clear feed.</p>
-                </div>
-                <video id="webcam" autoplay playsinline muted></video>
-                <div class="video-controls">
-                    <button id="toggle-cam" class="btn btn-main start">Go Live Now</button>
-                    <button id="private-toggle" class="btn btn-icon" title="Toggle Private">🔒</button>
-                </div>
-            </section>
-        </div>
+    <div id="payment-list">
+        <p style="color: #444; text-align: center; margin-top: 40px;">Waiting for new M-Pesa messages...</p>
     </div>
+
+    <audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, runTransaction, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDFkHGBwmngHYXgdolK6P37vS3UcB7arY8",
@@ -126,121 +38,71 @@
             projectId: "stripdot-278e8",
             storageBucket: "stripdot-278e8.firebasestorage.app",
             messagingSenderId: "98266108600",
-            appId: "1:98266108600:web:fae26df3a7464da95e9a4d",
-            measurementId: "G-1MGBW9DSF1"
+            appId: "1:98266108600:web:fae26df3a7464da95e9a4d"
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        let stream = null;
-        let currentUserId = null;
-        let isPrivate = false;
+        const alertSound = document.getElementById('alert-sound');
 
-        window.toggleAuth = () => {
-            document.getElementById('login-form').style.display = document.getElementById('login-form').style.display === 'none' ? 'block' : 'none';
-            document.getElementById('register-form').style.display = document.getElementById('register-form').style.display === 'none' ? 'block' : 'none';
-        };
+        // Listen for "Pending Verification" payments
+        const q = query(collection(db, "payments"), where("status", "==", "Pending Verification"));
 
-        // --- Sharing Logic ---
-        window.copyShareLink = () => {
-            const linkInput = document.getElementById('share-link-input');
-            linkInput.select();
-            navigator.clipboard.writeText(linkInput.value);
-            const btn = document.querySelector('.btn-copy');
-            btn.innerText = "Saved!";
-            setTimeout(() => btn.innerText = "Copy", 2000);
-        };
-
-        // --- Auth & Profile ---
-        document.getElementById('btn-register').onclick = async () => {
-            const email = document.getElementById('reg-email').value;
-            const pass = document.getElementById('reg-password').value;
-            const name = document.getElementById('reg-name').value.replace(/\s+/g, '_');
-            try {
-                const res = await createUserWithEmailAndPassword(auth, email, pass);
-                await setDoc(doc(db, "creators", res.user.uid), { 
-                    stageName: name, 
-                    tokens: 0,
-                    joinedAt: serverTimestamp() 
-                });
-            } catch (e) { alert(e.message); }
-        };
-
-        document.getElementById('btn-login').onclick = async () => {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); } 
-            catch (e) { alert(e.message); }
-        };
-
-        document.getElementById('master-logout').onclick = () => signOut(auth);
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                onSnapshot(doc(db, "creators", user.uid), (snap) => {
-                    if(snap.exists()){
-                        const data = snap.data();
-                        document.getElementById('token-count').innerText = data.tokens.toFixed(2);
-                        document.getElementById('kes-value').innerText = Math.floor(data.tokens * 13.5).toLocaleString();
-                        document.getElementById('header-user').innerText = `@${data.stageName}`;
-                        
-                        // Generate Share Link
-                        const baseUrl = window.location.origin;
-                        document.getElementById('share-link-input').value = `${baseUrl}/live/${data.stageName}`;
-                    }
-                });
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('studio-app').style.display = 'flex';
-            } else {
-                document.getElementById('auth-container').style.display = 'flex';
-                document.getElementById('studio-app').style.display = 'none';
+        onSnapshot(q, (snapshot) => {
+            const list = document.getElementById('payment-list');
+            
+            if (snapshot.empty) {
+                list.innerHTML = `<p style="color: #444; text-align: center; margin-top: 40px;">No pending payments.</p>`;
+                return;
             }
+
+            list.innerHTML = "";
+            snapshot.forEach((paymentDoc) => {
+                const data = paymentDoc.data();
+                const id = paymentDoc.id;
+
+                // Play sound for new entries
+                alertSound.play().catch(e => console.log("Audio needs user click first"));
+
+                const card = document.createElement('div');
+                card.className = 'payout-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="status-badge">New Request</div>
+                        <div class="msg-text">${data.message}</div>
+                        <small>User ID: ${data.uid}</small>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <input type="number" id="amt-${id}" placeholder="Tokens" style="padding:8px; border-radius:5px; border:none;">
+                        <button class="btn-approve" onclick="approvePayment('${id}', '${data.uid}')">Verify & Add</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
         });
 
-        // --- Camera & Private Controls (Same as before) ---
-        document.getElementById('toggle-cam').onclick = async () => {
-            const btn = document.getElementById('toggle-cam');
-            const video = document.getElementById('webcam');
-            if (!stream) {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    video.srcObject = stream;
-                    btn.innerText = "End Session";
-                    btn.classList.replace('start', 'stop');
-                } catch(e) { alert("Check camera permissions."); }
-            } else {
-                stream.getTracks().forEach(t => t.stop());
-                video.srcObject = null;
-                stream = null;
-                btn.innerText = "Go Live Now";
-                btn.classList.replace('stop', 'start');
-            }
-        };
+        window.approvePayment = async (paymentId, userId) => {
+            const amount = parseFloat(document.getElementById(`amt-${paymentId}`).value);
+            if (!amount || amount <= 0) return alert("Enter token amount first!");
 
-        document.getElementById('private-toggle').onclick = () => {
-            if(!stream) return alert("Go Live first!");
-            isPrivate = !isPrivate;
-            document.getElementById('private-ui').style.display = isPrivate ? 'flex' : 'none';
-            document.getElementById('webcam').style.filter = isPrivate ? 'blur(60px) grayscale(1)' : 'none';
-            document.getElementById('private-toggle').innerText = isPrivate ? "🔓" : "🔒";
-        };
-
-        document.getElementById('payout-trigger').onclick = async () => {
-            if(!currentUserId) return;
             try {
-                await runTransaction(db, async (t) => {
-                    const ref = doc(db, "creators", currentUserId);
-                    const docSnap = await t.get(ref);
-                    const bal = docSnap.data().tokens;
-                    if(bal < 100) throw "Minimum 100 tokens.";
-                    t.update(ref, { tokens: 0 });
-                    t.set(doc(collection(db, "payout_requests")), { uid: currentUserId, tokens: bal, status: "Pending", time: serverTimestamp() });
+                await runTransaction(db, async (transaction) => {
+                    const userRef = doc(db, "creators", userId);
+                    const userDoc = await transaction.get(userRef);
+                    
+                    if (!userDoc.exists()) throw "User does not exist!";
+
+                    const currentTokens = userDoc.data().tokens || 0;
+                    transaction.update(userRef, { tokens: currentTokens + amount });
+                    
+                    // Mark payment as processed (delete it from queue)
+                    const paymentRef = doc(db, "payments", paymentId);
+                    transaction.delete(paymentRef);
                 });
-                alert("Payout requested!");
-            } catch(e) { alert(e); }
+                alert("Tokens Added Successfully!");
+            } catch (e) {
+                alert("Error: " + e);
+            }
         };
     </script>
 </body>
