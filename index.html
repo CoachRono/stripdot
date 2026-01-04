@@ -25,7 +25,12 @@
         .card { background: var(--glass); padding: 20px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
         .token-display { font-size: 2.2rem; font-weight: 800; color: var(--pink); margin: 5px 0; }
         
-        /* Video & Effects */
+        /* Link Sharing UI */
+        .link-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .link-box input { background: none; border: none; color: #888; font-size: 0.75rem; flex-grow: 1; outline: none; pointer-events: none; }
+        .btn-copy { background: var(--pink); border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; }
+
+        /* Video & Controls */
         .video-window { position: relative; width: 100%; height: 100%; background: #000; border-radius: 24px; overflow: hidden; }
         #webcam { width: 100%; height: 100%; object-fit: cover; transition: filter 0.5s ease; }
         .private-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(50px); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5; text-align: center; }
@@ -57,7 +62,7 @@
             </div>
             <div id="register-form" style="display:none;">
                 <h3>Registration</h3>
-                <input type="text" id="reg-name" placeholder="Stage Name (e.g. @Rose_Live)">
+                <input type="text" id="reg-name" placeholder="Stage Name (no spaces)">
                 <input type="email" id="reg-email" placeholder="Email">
                 <input type="password" id="reg-password" placeholder="Password">
                 <button class="btn btn-main start" id="btn-register">Create Studio</button>
@@ -69,11 +74,20 @@
     <div id="studio-app" class="glass-container" style="display: none;">
         <nav class="navbar">
             <div class="logo">STRIP<span>DOT</span></div>
-            <div id="header-user">@User • <button onclick="auth.signOut()" style="background:none; border:none; color:var(--pink); cursor:pointer; font-weight:bold;">Logout</button></div>
+            <div id="header-user">@User • <button id="master-logout" style="background:none; border:none; color:var(--pink); cursor:pointer; font-weight:bold;">Logout</button></div>
         </nav>
 
         <div class="main-layout">
             <aside class="sidebar">
+                <div class="card">
+                    <h4>Invite Clients</h4>
+                    <p style="font-size: 0.7rem; color: #888;">Share your live link to earn tokens:</p>
+                    <div class="link-box">
+                        <input type="text" id="share-link-input" value="stripdot.live/loading...">
+                        <button class="btn-copy" onclick="copyShareLink()">Copy</button>
+                    </div>
+                </div>
+
                 <div class="card">
                     <h3>My Earnings</h3>
                     <div class="token-display">💎 <span id="token-count">0.00</span></div>
@@ -124,17 +138,26 @@
         let currentUserId = null;
         let isPrivate = false;
 
-        // --- Auth UI Toggle ---
         window.toggleAuth = () => {
             document.getElementById('login-form').style.display = document.getElementById('login-form').style.display === 'none' ? 'block' : 'none';
             document.getElementById('register-form').style.display = document.getElementById('register-form').style.display === 'none' ? 'block' : 'none';
         };
 
-        // --- Registration Logic ---
+        // --- Sharing Logic ---
+        window.copyShareLink = () => {
+            const linkInput = document.getElementById('share-link-input');
+            linkInput.select();
+            navigator.clipboard.writeText(linkInput.value);
+            const btn = document.querySelector('.btn-copy');
+            btn.innerText = "Saved!";
+            setTimeout(() => btn.innerText = "Copy", 2000);
+        };
+
+        // --- Auth & Profile ---
         document.getElementById('btn-register').onclick = async () => {
             const email = document.getElementById('reg-email').value;
             const pass = document.getElementById('reg-password').value;
-            const name = document.getElementById('reg-name').value;
+            const name = document.getElementById('reg-name').value.replace(/\s+/g, '_');
             try {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 await setDoc(doc(db, "creators", res.user.uid), { 
@@ -145,7 +168,6 @@
             } catch (e) { alert(e.message); }
         };
 
-        // --- Login Logic ---
         document.getElementById('btn-login').onclick = async () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-password').value;
@@ -153,7 +175,8 @@
             catch (e) { alert(e.message); }
         };
 
-        // --- Monitor Data in Real-Time ---
+        document.getElementById('master-logout').onclick = () => signOut(auth);
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUserId = user.uid;
@@ -162,8 +185,11 @@
                         const data = snap.data();
                         document.getElementById('token-count').innerText = data.tokens.toFixed(2);
                         document.getElementById('kes-value').innerText = Math.floor(data.tokens * 13.5).toLocaleString();
-                        document.getElementById('header-user').innerHTML = `@${data.stageName} • <button id="logout-btn" style="background:none; border:none; color:var(--pink); cursor:pointer;">Logout</button>`;
-                        document.getElementById('logout-btn').onclick = () => signOut(auth);
+                        document.getElementById('header-user').innerText = `@${data.stageName}`;
+                        
+                        // Generate Share Link
+                        const baseUrl = window.location.origin;
+                        document.getElementById('share-link-input').value = `${baseUrl}/live/${data.stageName}`;
                     }
                 });
                 document.getElementById('auth-container').style.display = 'none';
@@ -174,7 +200,7 @@
             }
         });
 
-        // --- Camera Controls ---
+        // --- Camera & Private Controls (Same as before) ---
         document.getElementById('toggle-cam').onclick = async () => {
             const btn = document.getElementById('toggle-cam');
             const video = document.getElementById('webcam');
@@ -184,7 +210,7 @@
                     video.srcObject = stream;
                     btn.innerText = "End Session";
                     btn.classList.replace('start', 'stop');
-                } catch(e) { alert("Camera Permission Required"); }
+                } catch(e) { alert("Check camera permissions."); }
             } else {
                 stream.getTracks().forEach(t => t.stop());
                 video.srcObject = null;
@@ -194,7 +220,6 @@
             }
         };
 
-        // --- Private Mode ---
         document.getElementById('private-toggle').onclick = () => {
             if(!stream) return alert("Go Live first!");
             isPrivate = !isPrivate;
@@ -203,31 +228,19 @@
             document.getElementById('private-toggle').innerText = isPrivate ? "🔓" : "🔒";
         };
 
-        // --- Secure Payout ---
         document.getElementById('payout-trigger').onclick = async () => {
             if(!currentUserId) return;
-            const btn = document.getElementById('payout-trigger');
             try {
-                btn.disabled = true;
-                await runTransaction(db, async (transaction) => {
-                    const userRef = doc(db, "creators", currentUserId);
-                    const userDoc = await transaction.get(userRef);
-                    const bal = userDoc.data().tokens;
-                    if (bal < 100) throw "Minimum 100 tokens required.";
-                    
-                    transaction.update(userRef, { tokens: 0 });
-                    const reqRef = doc(collection(db, "payout_requests"));
-                    transaction.set(reqRef, {
-                        uid: currentUserId,
-                        tokens: bal,
-                        kes: bal * 13.5,
-                        status: "Pending",
-                        timestamp: serverTimestamp()
-                    });
+                await runTransaction(db, async (t) => {
+                    const ref = doc(db, "creators", currentUserId);
+                    const docSnap = await t.get(ref);
+                    const bal = docSnap.data().tokens;
+                    if(bal < 100) throw "Minimum 100 tokens.";
+                    t.update(ref, { tokens: 0 });
+                    t.set(doc(collection(db, "payout_requests")), { uid: currentUserId, tokens: bal, status: "Pending", time: serverTimestamp() });
                 });
-                alert("M-Pesa Payout Request Sent!");
-            } catch (e) { alert(e); }
-            finally { btn.disabled = false; }
+                alert("Payout requested!");
+            } catch(e) { alert(e); }
         };
     </script>
 </body>
